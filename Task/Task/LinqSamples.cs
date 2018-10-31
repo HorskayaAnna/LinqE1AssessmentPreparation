@@ -85,7 +85,7 @@ namespace SampleQueries
         }
         /*
         [Category("Restriction Operators")]
-        [Title("Where - Task 4")]
+        [Title("Where - Task 2")]
         [Description("")]
 
         public void Linq4()
@@ -125,7 +125,8 @@ namespace SampleQueries
         }
 
         /* 
-         Выдайте список клиентов с указанием, начиная с какого месяца какого года они стали клиентами 
+         Выдайте список клиентов с указанием, начиная с какого месяца какого 
+         года они стали клиентами 
          (принять за таковые месяц и год самого первого заказа) */
         [Category("Restriction Operators")]
         [Title("Where - Task 4")]
@@ -134,13 +135,39 @@ namespace SampleQueries
         public void Linq4()
         {
             var customers = dataSource.Customers.Where(u => u.Orders.Any())
-                .Select(u => new { Customer = u.CustomerID, OrderDate = u.Orders.OrderBy(p => p.OrderDate).Select(p => p.OrderDate).First() });
+                .Select(u => new { Customer = u.CustomerID,
+                    OrderDate = u.Orders.OrderBy(p => p.OrderDate).Select(p => p.OrderDate).First() });
 
             foreach (var u in customers)
             {
                 ObjectDumper.Write($"CustomerId = {u.Customer} " +
                     $"Month = {u.OrderDate.Month} Year = {u.OrderDate.Year}");
             }
+        }
+
+        /* 
+        Сделайте предыдущее задание, но выдайте список отсортированным по году,
+        месяцу, оборотам клиента (от максимального к минимальному) и имени клиента
+        */
+        [Category("Restriction Operators")]
+        [Title("Where - Task 5")]
+        [Description("")]
+        public void Linq5()
+        {
+            var customers = dataSource.Customers.Where(u => u.Orders.Any())
+                .Select(u => new { Customer = u.CustomerID,
+                    OrderDate = u.Orders.OrderBy(p => p.OrderDate).Select(p => p.OrderDate).First(),
+                    TotalPrice = u.Orders.Sum(o => o.Total)
+                }).OrderByDescending(c => c.OrderDate.Year)
+                .ThenByDescending(c => c.TotalPrice)
+                .ThenByDescending(c => c.OrderDate.Month)
+                .ThenByDescending(c => c.Customer);
+
+            foreach (var c in customers)
+            {
+                ObjectDumper.Write($"CustomerId = {c.Customer} +" + $"TotalPrice = {c.TotalPrice}" +
+                    $"Month = {c.OrderDate.Month} Year = {c.OrderDate.Year}");
+            };
         }
 
         /*
@@ -235,5 +262,34 @@ namespace SampleQueries
             }
         }
 
+        /*
+        Сделайте среднегодовую статистику активности 
+        клиентов по месяцам(без учета года), статистику по годам, 
+        по годам и месяцам(т.е.когда один месяц в разные годы имеет своё значение).
+  */
+        [Category("Restriction Operators")]
+        [Title("Where - Task 10")]
+        [Description("")]
+
+        public void Linq10()
+        {
+            var prodGroup = dataSource.Customers
+                .GroupBy(t => t.City)
+                .Select(u => new
+                {
+                    City = u.Key,
+                    AveragePrise = u.Average(t => t.Orders.Sum(p => p.Total)),
+                    Intensity = u.Average(p => p.Orders.Length)
+
+                }
+                );
+
+            foreach (var p in prodGroup)
+            {
+                ObjectDumper.Write($"City: {p.City}\n");
+                ObjectDumper.Write($"AveragePrise: {p.AveragePrise}\n");
+                ObjectDumper.Write($"Intensity: {p.Intensity}\n");
+            }
+        }
     }
 }
